@@ -1,4 +1,6 @@
 use teloxide::prelude::*;
+mod sheets;
+use sheets::get_service;
 
 async fn run_bot() {
     // pretty_env_logger::init();
@@ -8,6 +10,7 @@ async fn run_bot() {
 
     teloxide::repl(bot, |bot: Bot, msg: Message| async move {
         bot.send_dice(msg.chat.id).await?;
+        get_service().await;
         Ok(())
     }).await;
 }
@@ -16,4 +19,5 @@ async fn run_bot() {
 #[tokio::main]
 async fn main() {
     run_bot().await;
+
 }
