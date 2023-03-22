@@ -1,10 +1,12 @@
 extern crate google_sheets4 as sheets4;
 
+use std::default::Default;
+use std::fs;
+
+use google_sheets4::hyper_rustls::HttpsConnector;
 use sheets4::{Error, Result};
 use sheets4::{hyper, hyper_rustls, oauth2, Sheets};
 use sheets4::api::ValueRange;
-use std::default::Default;
-use std::fs;
 
 fn read_credentials() -> oauth2::ApplicationSecret {
     let contents = fs::read_to_string("credentials.json").unwrap();
@@ -33,6 +35,54 @@ pub async fn get_service() {
     // execute the final call using `doit()`.
     // Values shown here are possibly random and not representative !
     let result = hub.spreadsheets().values_append(req, "spreadsheetId", "range")
+        .value_input_option("amet.")
+        .response_value_render_option("duo")
+        .response_date_time_render_option("ipsum")
+        .insert_data_option("gubergren")
+        .include_values_in_response(true)
+        .doit().await;
+
+    match result {
+        Err(e) => match e {
+            // The Error enum provides details about what exactly happened.
+            // You can also just use its `Debug`, `Display` or `Error` traits
+            Error::HttpError(_)
+            | Error::Io(_)
+            | Error::MissingAPIKey
+            | Error::MissingToken(_)
+            | Error::Cancelled
+            | Error::UploadSizeLimitExceeded(_, _)
+            | Error::Failure(_)
+            | Error::BadRequest(_)
+            | Error::FieldClash(_)
+            | Error::JsonDecodeError(_, _) => println!("{}", e),
+        },
+        Ok(res) => println!("Success: {:?}", res),
+    }
+}
+
+pub async fn append_to_spreadsheet(sheet_id: &str, range: &str, values: Vec<Vec<String>>) {
+    // let mut hub = get_service().await;
+
+    let secret: oauth2::ApplicationSecret = read_credentials();
+
+    let auth = oauth2::InstalledFlowAuthenticator::builder(
+        secret,
+        oauth2::InstalledFlowReturnMethod::HTTPRedirect,
+    ).build().await.unwrap();
+
+    let mut hub = Sheets::new(
+        hyper::Client::builder()
+            .build(hyper_rustls::HttpsConnectorBuilder::new()
+                .with_native_roots()
+                .https_or_http()
+                .enable_http1()
+                .enable_http2()
+                .build()), auth);
+
+    let mut req = ValueRange::default();
+
+    let result = hub.spreadsheets().values_append(req, sheet_id, range)
         .value_input_option("amet.")
         .response_value_render_option("duo")
         .response_date_time_render_option("ipsum")
