@@ -23,8 +23,10 @@ pub async fn append_to_spreadsheet(sheet_id: &str, range: &str) {
                 .build()), auth);
 
     let mut req = ValueRange::default();
-     req.values = Some(vec![vec![serde_json::json!("1").to_owned(), serde_json::json!("2").to_owned(),
-                                 serde_json::json!("3").to_owned()]]);
+
+    req.values = Some(vec![vec![serde_json::json!("1").to_owned(),
+                                serde_json::json!("2").to_owned(),
+                                serde_json::json!("3").to_owned()]]);
 
     let result = hub.spreadsheets().values_append(req, sheet_id, range)
         .value_input_option("RAW")
