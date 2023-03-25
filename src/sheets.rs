@@ -4,6 +4,7 @@ use std::default::Default;
 use std::fs;
 
 use google_sheets4::hyper_rustls::HttpsConnector;
+use google_sheets4::oauth2::read_service_account_key;
 use sheets4::{Error, Result};
 use sheets4::{hyper, hyper_rustls, oauth2, Sheets};
 use sheets4::api::ValueRange;
@@ -62,14 +63,8 @@ pub async fn get_service() {
 }
 
 pub async fn append_to_spreadsheet(sheet_id: &str, range: &str, values: Vec<Vec<String>>) {
-    // let mut hub = get_service().await;
-
-    let secret: oauth2::ApplicationSecret = read_credentials();
-
-    let auth = oauth2::InstalledFlowAuthenticator::builder(
-        secret,
-        oauth2::InstalledFlowReturnMethod::HTTPRedirect,
-    ).build().await.unwrap();
+    let key = read_service_account_key("credentials.json").await.unwrap();
+    let auth = oauth2::ServiceAccountAuthenticator::builder(key).build().await.unwrap();
 
     let mut hub = Sheets::new(
         hyper::Client::builder()
