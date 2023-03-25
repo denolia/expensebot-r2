@@ -1,6 +1,6 @@
 use teloxide::prelude::*;
 mod sheets;
-use sheets::get_service;
+
 use sheets::append_to_spreadsheet;
 use std::env;
 use chrono::Utc;
@@ -29,9 +29,9 @@ async fn run_bot() {
 
         let sheet_id = get_spreadsheet_id();
         let range = "Sheet1!A1:C1";
-        let values = vec![vec![chat_id.to_string(), username, date]];
+        // let values = vec![vec![chat_id.to_string(), username, date]];
 
-        append_to_spreadsheet(&sheet_id, range, values).await;
+        append_to_spreadsheet(&sheet_id, range).await;
 
         Ok(())
     }).await;
