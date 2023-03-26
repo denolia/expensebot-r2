@@ -1,15 +1,13 @@
 use teloxide::prelude::*;
 mod sheets;
 
+use chrono::Utc;
 use sheets::append_to_spreadsheet;
 use std::env;
-use chrono::Utc;
-
 
 fn get_spreadsheet_id() -> String {
-    env::var("SPREADSHEET_ID").unwrap_or_else(|_| {
-        panic!("Environment variable SPREADSHEET_ID is not set")
-    })
+    env::var("SPREADSHEET_ID")
+        .unwrap_or_else(|_| panic!("Environment variable SPREADSHEET_ID is not set"))
 }
 
 // 1tpiEu-Ou2cVi-382xIwEhLu6BAUOVmH8n8co0At1X8w/edit#gid=824503092
@@ -21,7 +19,9 @@ async fn run_bot() {
 
     teloxide::repl(bot, |bot: Bot, msg: Message| async move {
         let chat_id = msg.chat.id;
-        let username = msg.from().map(|user| user.username.clone().unwrap_or_default())
+        let username = msg
+            .from()
+            .map(|user| user.username.clone().unwrap_or_default())
             .unwrap_or_default();
         let date = chrono::Utc::now().to_rfc3339();
 
@@ -34,12 +34,11 @@ async fn run_bot() {
         append_to_spreadsheet(&sheet_id, range).await;
 
         Ok(())
-    }).await;
+    })
+    .await;
 }
-
 
 #[tokio::main]
 async fn main() {
     run_bot().await;
-
 }

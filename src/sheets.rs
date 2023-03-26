@@ -1,38 +1,33 @@
 extern crate google_sheets4 as sheets4;
 
+use google_sheets4::hyper::client::HttpConnector;
 use std::default::Default;
 use std::fs;
 
 use google_sheets4::hyper_rustls::HttpsConnector;
 use google_sheets4::oauth2::read_service_account_key;
-use sheets4::{Error, Result};
-use sheets4::{hyper, hyper_rustls, oauth2, Sheets};
 use sheets4::api::ValueRange;
+use sheets4::{hyper, hyper_rustls, oauth2, Sheets};
+use sheets4::{Error, Result};
 
 pub async fn append_to_spreadsheet(sheet_id: &str, range: &str) {
-    let key = read_service_account_key("credentials.json").await.unwrap();
-    let auth = oauth2::ServiceAccountAuthenticator::builder(key).build().await.unwrap();
-
-    let mut hub = Sheets::new(
-        hyper::Client::builder()
-            .build(hyper_rustls::HttpsConnectorBuilder::new()
-                .with_native_roots()
-                .https_or_http()
-                .enable_http1()
-                .enable_http2()
-                .build()), auth);
+    let hub = get_service().await;
 
     let mut req = ValueRange::default();
 
-    req.values = Some(vec![vec![serde_json::json!("1").to_owned(),
-                                serde_json::json!("2").to_owned(),
-                                serde_json::json!("3").to_owned()]]);
+    req.values = Some(vec![vec![
+        serde_json::json!("1"),
+        serde_json::json!("2"),
+        serde_json::json!("3"),
+    ]]);
 
-    let result = hub.spreadsheets().values_append(req, sheet_id, range)
-        .value_input_option("RAW")
-        // .insert_data_option("5")
+    let result = hub
+        .spreadsheets()
+        .values_append(req, sheet_id, range)
+        .value_input_option("RAW") // .insert_data_option("5")
         .include_values_in_response(true)
-        .doit().await;
+        .doit()
+        .await;
 
     match result {
         Err(e) => match e {
@@ -51,4 +46,24 @@ pub async fn append_to_spreadsheet(sheet_id: &str, range: &str) {
         },
         Ok(res) => println!("Success: {:?}", res),
     }
+}
+
+async fn get_service() -> Sheets<HttpsConnector<HttpConnector>> {
+    let key = read_service_account_key("credentials.json").await.unwrap();
+    let auth = oauth2::ServiceAccountAuthenticator::builder(key)
+        .build()
+        .await
+        .unwrap();
+
+    Sheets::new(
+        hyper::Client::builder().build(
+            hyper_rustls::HttpsConnectorBuilder::new()
+                .with_native_roots()
+                .https_or_http()
+                .enable_http1()
+                .enable_http2()
+                .build(),
+        ),
+        auth,
+    )
 }
