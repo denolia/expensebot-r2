@@ -13,18 +13,12 @@ use sheets4::{Error, Result};
 pub async fn append_to_spreadsheet(sheet_id: &str, range: &str) {
     let hub = get_service().await;
 
-    let mut req = ValueRange::default();
-
-    req.values = Some(vec![vec![
-        serde_json::json!("1"),
-        serde_json::json!("2"),
-        serde_json::json!("3"),
-    ]]);
+    let vr = serde_json::from_value(serde_json::json!({"values": [["2", "3", "4"]]})).unwrap();
 
     let result = hub
         .spreadsheets()
-        .values_append(req, sheet_id, range)
-        .value_input_option("RAW") // .insert_data_option("5")
+        .values_append(vr, sheet_id, range)
+        .value_input_option("RAW")
         .include_values_in_response(true)
         .doit()
         .await;
